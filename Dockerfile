@@ -29,7 +29,8 @@ RUN yum update -y && \
     rm -rf /var/cache/yum
 
 # set environment variables
-ENV MASTER_PUBLIC_URL=ocp.master.com
+ENV SECRET_DIR=/secrets \
+    MASTER_PUBLIC_URL=ocp.master.com
 
 # create supporting folders, permissions, etc
 RUN mkdir /apache && \
