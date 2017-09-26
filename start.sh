@@ -12,6 +12,9 @@ USER_NAME=$(id -un)
 # show that alternate user IDs are being honored
 echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 
+# collect information
+export CURRENT_NAMESPACE=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
+
 # create client certificate bundle
 cat /secrets/tls.crt > /tmp/proxy_client.pem
 cat /secrets/tls.key >> /tmp/proxy_client.pem

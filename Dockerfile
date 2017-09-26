@@ -38,7 +38,9 @@ RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf && \
     rm -f /etc/httpd/conf.d/welcome.conf
 
 # set environment variables
-ENV MASTER_PUBLIC_URL=ocp.master.com
+ENV MASTER_PUBLIC_URL=ocp.master.com \
+    PIVPROXY_PUBLIC_URL=pivproxy.master.com \
+    BASE_NAME=ose-pivproxy
 
 # create supporting folders, permissions, etc
 RUN mkdir /apache && \
