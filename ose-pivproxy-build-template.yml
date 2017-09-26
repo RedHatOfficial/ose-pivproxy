@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ose-pivproxy-build
+  annotations:
+    description: Build Config template for building a PIV/CAC proxy images for OSE authentication
+  labels:
+    app: ose-pivproxy
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${IMAGE_NAME}
+    labels:
+      app: ose-pivproxy
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: ${IMAGE_NAME}-bc
+    labels:
+      app: ${IMAGE_NAME}
+  spec:
+    runPolicy: Serial
+    source:
+      type: Git
+      git:
+        uri: ${GIT_URI}
+        ref: ${GIT_REF}
+    strategy:
+      type: Docker
+    output:
+      to:
+        kind: ImageStreamTag
+        name: '${IMAGE_NAME}:latest'
+parameters:
+  - name: GIT_URI
+    description: The Git URI.
+    value: "https://github.com/chrisruffalo/ose-pivproxy.git"
+    required: true
+  - name: GIT_REF
+    description: The git reference (tag, branch, or other reference) to build from.
+    value: master
+    required: true
+  - name: IMAGE_NAME
+    description: The name of the image to be used when performing the pull operation.
+    value: ose-pivproxy
+    required: true
