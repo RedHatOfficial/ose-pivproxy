@@ -130,7 +130,7 @@ oadm ca create-server-cert \
 
 You can verify that the server certificate is correct by checking the subject alternate name provided.
 ```bash
-[]$ openssl x509 -in /path/to/server.crt -noout -text | grep
+[]$ openssl x509 -in /path/to/<public pivproxy url>.crt -noout -text | grep
   X509v3 Subject Alternative Name:                                    
     DNS:<public pivproxy url>, DNS:<another expected host name>
 ```
