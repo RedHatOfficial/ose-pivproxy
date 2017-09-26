@@ -31,6 +31,8 @@ RUN yum update -y && \
 # change apache ports and remove files
 RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf && \
     sed -i 's/Listen 443/Listen 8443/g' /etc/httpd/conf.d/ssl.conf && \
+    sed -i 's/SSLCertificateFile/#SSLCertificateFile/g' /etc/httpd/conf.d/ssl.conf && \
+    sed -i 's/SSLCertificateKeyFile/#SSLCertificateKeyFile/g' /etc/httpd/conf.d/ssl.conf && \
     rm -f /etc/httpd/conf.d/autoindex.conf && \
     rm -f /etc/httpd/conf.d/userdir.conf && \
     rm -f /etc/httpd/conf.d/README && \
@@ -67,4 +69,4 @@ WORKDIR /apache
 VOLUME ["/secrets"]
 
 # start httpd as the entry point
-ENTRYPOINT /apache/start.sh
+#ENTRYPOINT /apache/start.sh
