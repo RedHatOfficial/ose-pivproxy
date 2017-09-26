@@ -55,6 +55,7 @@ RUN chgrp -R 0 /apache && \
     chmod u+x,g+x /apache/start.sh && \
     chgrp -R 0 /secrets && \
     chgrp -R 0 /run/httpd && \
+    chgrp -R 0 /etc/httpd && \
     chmod -R g+wx /run/httpd && \
     chmod -R g+wx /etc/httpd/run && \
     chmod -R g+wx /etc/httpd/logs
