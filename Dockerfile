@@ -69,4 +69,4 @@ WORKDIR /apache
 VOLUME ["/secrets"]
 
 # start httpd as the entry point
-#ENTRYPOINT /apache/start.sh
+ENTRYPOINT /apache/start.sh
