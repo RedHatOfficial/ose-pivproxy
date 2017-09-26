@@ -117,11 +117,22 @@ There are three pieces of required material:
 * The server private key matching the certificate
 * The CA chain file that provides the trust chain for the server certificate
 
+**If you do not have server certificates you can create them easily with the `oc` command**. (From a master node.)
+```bash
+oadm ca create-server-cert \
+    --cert='/etc/origin/proxy/<public pivproxy url>.crt' \
+    --key='/etc/origin/proxy/<public pivproxy url>.key' \
+    --hostnames=<public pivproxy url>,ose-pivproxy.svc,ose-pivproxy.pivproxy.svc,ose-pivproxy.pivproxy.svc.default.local \
+    --signer-cert=/etc/origin/master/ca.crt \
+    --signer-key='/etc/origin/master/ca.key' \
+    --signer-serial='/etc/origin/master/ca.serial.txt'
+```
+
 You can verify that the server certificate is correct by checking the subject alternate name provided.
 ```bash
 []$ openssl x509 -in /path/to/server.crt -noout -text | grep
   X509v3 Subject Alternative Name:                                    
-    DNS:<expected host name>, DNS:<another expected host name>
+    DNS:<public pivproxy url>, DNS:<another expected host name>
 ```
 
 _If the "DNS:" entries are not present or do not match the expected route the certificates will need to be reissued._
