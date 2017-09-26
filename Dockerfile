@@ -26,7 +26,8 @@ RUN yum update -y && \
                    curl \
                    nss_wrapper && \
     yum clean all && \
-    rm -rf /var/cache/yum
+    rm -rf /var/cache/yum/* && \
+    rm -rf /var/lib/yum/*
 
 # change apache ports and remove files
 RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf && \
