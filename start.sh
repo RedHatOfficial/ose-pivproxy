@@ -15,8 +15,8 @@ echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 # handle pre-startup configuration
 
 # create client certificate bundle
-cat ${SECRET_DIR}/tls.crt > /tmp/proxy_client.pem
-cat ${SECRET_DIR}/tls.key >> /tmp/proxy_client.pem
+cat /secrets/tls.crt > /tmp/proxy_client.pem
+cat /secrets/tls.key >> /tmp/proxy_client.pem
 
 # start apache
 /usr/sbin/httpd -DFOREGROUND

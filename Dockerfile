@@ -2,7 +2,7 @@
 FROM centos:7
 MAINTAINER Chris Ruffalo <cruffalo@redhat.com>
 
-LABEL io.k8s.description="HTTPDdo Proxy configured to support PIV authentication with OCP" \
+LABEL io.k8s.description="HTTPD Proxy configured to support PIV authentication with OCP" \
   io.k8s.display-name="HTTPD PIV Proxy" \
   io.openshift.expose-services="80:tcp,443:tcp \
   io.openshift.tags="x509,certificates,proxy,PIV,CAC" \
@@ -14,7 +14,7 @@ EXPOSE 80 443
 
 # yum update/install
 RUN yum update -y && \
-	yum install -y epel-release && \
+	  yum install -y epel-release && \
     yum install -y --setopt=tsflags=nodocs \
                    httpd \
                    mod_ssl \
@@ -29,8 +29,7 @@ RUN yum update -y && \
     rm -rf /var/cache/yum
 
 # set environment variables
-ENV SECRET_DIR=/secrets \
-    MASTER_PUBLIC_URL=ocp.master.com
+ENV MASTER_PUBLIC_URL=ocp.master.com
 
 # create supporting folders, permissions, etc
 RUN mkdir /apache && \
