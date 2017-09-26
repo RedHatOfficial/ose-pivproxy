@@ -46,8 +46,7 @@ COPY Dockerfile /buildinfo/
 RUN chgrp -R 0 /apache && \
     chmod u+x,g+x /apache/start.sh && \
     chgrp -R 0 /secrets && \
-    mkdir /run/httpd && \
-    chgrp -R 0 /run/httpd && \
+    chgrp -R 0 /run/httpd
 
 # set working dir
 WORKDIR /apache
