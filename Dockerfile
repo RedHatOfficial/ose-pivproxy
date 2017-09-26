@@ -58,7 +58,8 @@ RUN chgrp -R 0 /apache && \
     chgrp -R 0 /etc/httpd && \
     chmod -R g+wx /run/httpd && \
     chmod -R g+wx /etc/httpd/run && \
-    chmod -R g+wx /etc/httpd/logs
+    chmod -R g+wx /etc/httpd/logs && \
+    chmod -R g+rwx /var/log/httpd
 
 # set working dir
 WORKDIR /apache
