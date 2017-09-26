@@ -1,4 +1,4 @@
-# A Containerized x509/PIV/CAC Proxy for Authentication in OpenShift
+# Containerized x509/PIV/CAC Proxy for Authentication in OpenShift
 
 ## Requirements
 * SSH access to **at least one** Master node
@@ -48,13 +48,38 @@ If you need to create the project:
 ### Create the PIV Proxy Client PKI Secret
 In order to create a trusted communication channel between the server and the client there needs to be a set of PKI for the client (in this case the PIV proxy) to contact the target master. The master must also trust this communication and can be configured to allow only communication from this source. This prevents some third party from setting up their own authentication server and, through various forms of manipulation, using it as a fake source of authentication information.
 
-These commands must be performed on any **ONE** master node.
+These commands must be performed on any **ONE** master node as root (`sudo -i`).
 ```bash
-
+[]$ mkdir -p /etc/origin/proxy/
+[]$ oc adm ca create-signer-cert \
+    --cert='/etc/origin/proxy/proxyca.crt' \
+    --key='/etc/origin/proxy/proxyca.key' \
+    --name='openshift-proxy-signer@`date +%s`' \
+    --serial='/etc/origin/proxy/proxyca.serial.txt'
+[]$ oc adm create-api-client-config \
+    --certificate-authority='/etc/origin/proxy/proxyca.crt' \
+    --client-dir='/etc/origin/proxy' \
+    --signer-cert='/etc/origin/proxy/proxyca.crt' \
+    --signer-key='/etc/origin/proxy/proxyca.key' \
+    --signer-serial='/etc/origin/proxy/proxyca.serial.txt' \
+    --user='system:proxy'
+[]$ cat /etc/origin/proxy/system\:proxy.crt \
+      /etc/origin/proxy/system\:proxy.key \
+      > /etc/origin/proxy/piv_proxy.pem
 ```
+_Note: these commands can actually be executed **anywhere** but executing them on the first master is considerably easier when it has the `oc` client installed already. In that case you can adjust the paths so that they are in a temporary or local directory like `./proxy`._
 
-These commands can be performed from any oc client.
+
+Then copy the files from the `/etc/origin/proxy` directory to each other master.
 ```bash
+[]$ scp /etc/origin/proxy master2:/etc/origin/proxy
+[]$ scp /etc/origin/proxy master3:/etc/origin/proxy
+```
+_Note: this is not strictly necessary but keeps the files available in case they need to be reused or client material needs to be regenerated._
+
+Then copy the `piv_proxy.pem` to the node that the following commands will be executed from. These commands can be performed anywhere there is an `oc` client installed or they can be performed right on the master.
+```bash
+[]$ oc secret new ose-pivproxy-client-secrets piv_proxy.pem=/path/to/piv_proxy.pem
 ```
 
 ### Create the Smartcard CA Secret
@@ -129,7 +154,7 @@ identityProviders:
       kind: RequestHeaderIdentityProvider
       challengeURL: "https://<public pivproxy url>/challenging-proxy/oauth/authorize?${query}"
       loginURL: "https://<public pivproxy url>/login-proxy/oauth/authorize?${query}"
-      clientCA: /etc/origin/master/proxyca.crt
+      clientCA: /etc/origin/proxy/proxyca.crt
       clientCommonNames:
        - <public master url>
        - system:proxy
