@@ -9,6 +9,13 @@
   * Generally issued by the identification granting agency
   * Must be _all_ of the required authorities concatenated into one file
 
+## Variables
+Variables in this document are dentoed with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
+* `<public pivproxy url>` - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate.
+* `<public master url>` - the public URL used by clients to reach the master console. The PIV proxy will need to redirect traffic from itself to this URL to complete the authentication process.
+
+_Be sure to replace any instance of these variables in the below documentation with your own site-specific values._
+
 ## Instructions
 
 These instructions are written using examples. You do not need to use the same examples but you can modify them as needed. The default project namespace is named `pivproxy` but any other namespace can be used as long as the appropriate changes are made.
@@ -96,3 +103,27 @@ Once the new secret is in place the application should be redeployed.
 ```
 
 ### Configure Master(s) to use PIV Proxy
+
+The following identitiy provider needs to be added to the OCP master configuration. On each of the master nodes edit `/etc/origin/master/master-config.yaml` and add the following yaml to the `identityProviders` block as shown.
+
+```yaml
+identityProviders:
+  - name: "ocp_pivproxy"
+    challenge: true
+    login: true
+    mappingMethod: add
+    provider:
+      apiVersion: v1
+      kind: RequestHeaderIdentityProvider
+      challengeURL: "https://<public pivproxy url>/challenging-proxy/oauth/authorize?${query}"
+      loginURL: "https://<public pivproxy url>/login-proxy/oauth/authorize?${query}"
+      clientCA: /etc/origin/master/proxyca.crt
+      clientCommonNames:
+       - <public master url>
+       - system:proxy
+      headers:
+      - X-Remote-User
+
+```
+
+Once this is added, restart the master. _If there is more than one master then each master must be editied and restarted._
