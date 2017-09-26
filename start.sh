@@ -12,8 +12,6 @@ USER_NAME=$(id -un)
 # show that alternate user IDs are being honored
 echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 
-# handle pre-startup configuration
-
 # create client certificate bundle
 cat /secrets/tls.crt > /tmp/proxy_client.pem
 cat /secrets/tls.key >> /tmp/proxy_client.pem

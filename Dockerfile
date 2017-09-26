@@ -28,6 +28,14 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum
 
+# change apache ports and remove files
+RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf && \
+    sed -i 's/Listen 443/Listen 8443/g' /etc/httpd/conf.d/ssl.conf && \
+    rm -f /etc/httpd/conf.d/autoindex.conf && \
+    rm -f /etc/httpd/conf.d/userdir.conf && \
+    rm -f /etc/httpd/conf.d/README && \
+    rm -f /etc/httpd/conf.d/welcome.conf
+
 # set environment variables
 ENV MASTER_PUBLIC_URL=ocp.master.com
 
