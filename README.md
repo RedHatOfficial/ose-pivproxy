@@ -1,6 +1,8 @@
 # A Containerized x509/PIV/CAC Proxy for Authentication in OpenShift
 
-## Prerequisites
+## Requirements
+* SSH access to **at least one** Master node
+  * Sudo or root access on that node
 * Certificate Material for Authentication Endpoint
   * Private Key (ex: hostname.key)
   * Public Cert (ex: hostname.crt)
@@ -10,9 +12,9 @@
   * Must be _all_ of the required authorities concatenated into one file
 
 ## Variables
-Variables in this document are dentoed with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
-* `<public pivproxy url>` - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate.
-* `<public master url>` - the public URL used by clients to reach the master console. The PIV proxy will need to redirect traffic from itself to this URL to complete the authentication process.
+Variables in this document are denoted with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
+* **`<public pivproxy url>`** - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate.
+* **`<public master url>`** - the public URL used by clients to reach the master console. The PIV proxy will need to redirect traffic from itself to this URL to complete the authentication process.
 
 _Be sure to replace any instance of these variables in the below documentation with your own site-specific values._
 
@@ -43,7 +45,17 @@ If you need to create the project:
 []$ oc new-project pivproxy
 ```
 
-### Create the Client Secret
+### Create the PIV Proxy Client PKI Secret
+In order to create a trusted communication channel between the server and the client there needs to be a set of PKI for the client (in this case the PIV proxy) to contact the target master. The master must also trust this communication and can be configured to allow only communication from this source. This prevents some third party from setting up their own authentication server and, through various forms of manipulation, using it as a fake source of authentication information.
+
+These commands must be performed on any **ONE** master node.
+```bash
+
+```
+
+These commands can be performed from any oc client.
+```bash
+```
 
 ### Create the Smartcard CA Secret
 You will need to copy the issued CA that contains the trust for all of the authorized smart cards to a machine that has the `oc` client installed. Then you will use that material to create the target secret. The trust should be _all_ of the potential certificates that are used to sign the tokens (x509/PIV/CAC) that will be presented by authorized users. These certificates _must_ be concatenated into one file.
