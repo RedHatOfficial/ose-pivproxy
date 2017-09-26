@@ -10,7 +10,7 @@ LABEL io.k8s.description="HTTPD Proxy configured to support PIV authentication w
   architecture=x86_64
 
 # expose 80 for healthcheck and redirect, 443 for ssl
-EXPOSE 80 443
+EXPOSE 8080 8443
 
 # yum update/install
 RUN yum update -y && \
