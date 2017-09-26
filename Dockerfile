@@ -55,8 +55,9 @@ RUN chgrp -R 0 /apache && \
     chmod u+x,g+x /apache/start.sh && \
     chgrp -R 0 /secrets && \
     chgrp -R 0 /run/httpd && \
-    chmod -R g+w /run/httpd && \
-    chmod -R g+w /etc/httpd/{run,logs}
+    chmod -R g+wx /run/httpd && \
+    chmod -R g+wx /etc/httpd/run && \
+    chmod -R g+wx /etc/httpd/logs
 
 # set working dir
 WORKDIR /apache
