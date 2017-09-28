@@ -1,4 +1,4 @@
-# Containerized x509/PIV/CAC Proxy for Authentication in OpenShift
+# Containerized PIV/CAC Proxy for Authentication in OpenShift
 
 ## Requirements
 * SSH access to **at least one** Master node
@@ -187,3 +187,11 @@ There is a value, which defaults to `info` that can be set in `dc/ose-pivproxy`.
 ```
 
 This will cause the application to redeploy and there will be more information in the logs.
+
+## Common Issues
+
+**The main issue you are going to have is with trust and with hostnames for the serving certificate.**
+
+For the serving certificates modern browsers (IE10+, Chrome, Firefox) all **require** that there be a SAN (Subject Alternate Name) that matches the hostname. The CN alone is _no longer_ sufficient _and_ that advice has been added to the SSL/TLS RFCs. The SAN list is the canonical location for the matching DNS name(s).
+
+For the CAC/PIV trust chain it is imperative that _each_ intermediate trust is added. Many government agencies have rotating intermediate certificates that come in scope as new cards are issued and it is common to _forget_ to add new ones which means that new personnel will not be able to acces the site. This also means that an older version of the chain may not authenticate new users. Be aware of this and you will stop a lot of issues before they happen.
