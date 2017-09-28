@@ -13,7 +13,7 @@
 
 ## Variables
 Variables in this document are denoted with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
-* **`<public pivproxy url>`** - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate.
+* **`<public pivproxy url>`** - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate. Typically this would follow the application name, namespace, and cloud DNS base pattern. You could create a custom route for it if your hosting environment can support that.
 * **`<public master url>`** - the public URL used by clients to reach the master console. The PIV proxy will need to redirect traffic from itself to this URL to complete the authentication process.
 
 _Be sure to replace any instance of these variables in the below documentation with your own site-specific values._
@@ -50,22 +50,23 @@ In order to create a trusted communication channel between the server and the cl
 
 These commands must be performed on any **ONE** master node as root (`sudo -i`).
 ```bash
-[]$ mkdir -p /etc/origin/proxy/
+[]$ export PIV_SECRET_BASEDIR=/etc/origin/proxy
+[]$ mkdir -p $PIV_SECRET_BASEDIR
 []$ oc adm ca create-signer-cert \
-    --cert='/etc/origin/proxy/proxyca.crt' \
-    --key='/etc/origin/proxy/proxyca.key' \
+    --cert=$PIV_SECRET_BASEDIR/proxyca.crt \
+    --key=$PIV_SECRET_BASEDIR/proxyca.key \
     --name='openshift-proxy-signer@`date +%s`' \
-    --serial='/etc/origin/proxy/proxyca.serial.txt'
+    --serial=$PIV_SECRET_BASEDIR/proxyca.serial.txt
 []$ oc adm create-api-client-config \
-    --certificate-authority='/etc/origin/proxy/proxyca.crt' \
-    --client-dir='/etc/origin/proxy' \
-    --signer-cert='/etc/origin/proxy/proxyca.crt' \
-    --signer-key='/etc/origin/proxy/proxyca.key' \
-    --signer-serial='/etc/origin/proxy/proxyca.serial.txt' \
+    --certificate-authority=$PIV_SECRET_BASEDIR/proxyca.crt \
+    --client-dir=$PIV_SECRET_BASEDIR \
+    --signer-cert=$PIV_SECRET_BASEDIR/proxyca.crt \
+    --signer-key=$PIV_SECRET_BASEDIR/proxyca.key \
+    --signer-serial=$PIV_SECRET_BASEDIR/proxyca.serial.txt \
     --user='system:proxy'
-[]$ cat /etc/origin/proxy/system\:proxy.crt \
-      /etc/origin/proxy/system\:proxy.key \
-      > /etc/origin/proxy/piv_proxy.pem
+[]$ cat $PIV_SECRET_BASEDIR/system\:proxy.crt \
+      $PIV_SECRET_BASEDIR/system\:proxy.key \
+      > $PIV_SECRET_BASEDIR/piv_proxy.pem
 ```
 _Note: these commands can actually be executed **anywhere** but executing them on the first master is considerably easier when it has the `oc` client installed already. In that case you can adjust the paths so that they are in a temporary or local directory like `./proxy`._
 
@@ -77,9 +78,11 @@ Then copy the files from the `/etc/origin/proxy` directory to each other master.
 ```
 _Note: this is not strictly necessary but keeps the files available in case they need to be reused or client material needs to be regenerated._
 
-Then copy the `piv_proxy.pem` to the node that the following commands will be executed from. These commands can be performed anywhere there is an `oc` client installed or they can be performed right on the master.
+Then copy the `piv_proxy.pem` to the node that the following commands will be executed from. These commands can be performed anywhere there is an `oc` client installed or they can be performed right on the master. **Also** copy the master's CA from `/etc/origin/master/ca.crt`.
 ```bash
-[]$ oc secret new ose-pivproxy-client-secrets piv_proxy.pem=/path/to/piv_proxy.pem
+[]$ scp master1:/etc/origin/proxy/piv_proxy.pem /local/path/to/piv_proxy.pem
+[]$ scp master1:/etc/origin/master/ca.crt /local/path/to/master-ca.crt
+[]$ oc secret new ose-pivproxy-client-secrets piv_proxy.pem=/local/path/to/piv_proxy.pem master-ca.crt=/local/path/to/master-ca.crt
 ```
 
 ### Create the Smartcard CA Secret
@@ -119,7 +122,7 @@ There are three pieces of required material:
 
 **If you do not have server certificates you can create them easily with the `oc` command**. (From a master node.)
 ```bash
-oadm ca create-server-cert \
+[]$ oc adm ca create-server-cert \
     --cert='/etc/origin/proxy/<public pivproxy url>.crt' \
     --key='/etc/origin/proxy/<public pivproxy url>.key' \
     --hostnames=<public pivproxy url>,ose-pivproxy.svc,ose-pivproxy.pivproxy.svc,ose-pivproxy.pivproxy.svc.default.local \
@@ -171,7 +174,6 @@ identityProviders:
        - system:proxy
       headers:
       - X-Remote-User
-
 ```
 
 Once this is added, restart the master. _If there is more than one master then each master must be editied and restarted._
