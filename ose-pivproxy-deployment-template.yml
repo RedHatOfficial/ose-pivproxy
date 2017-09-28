@@ -77,15 +77,15 @@ objects:
         - name: ose-pivproxy-secret-mount
           secret:
             secretName: ose-pivproxy-certs
-            defaultMode: 420
+            defaultMode: 440
         - name: ose-pivproxy-smartcard-ca-mount
           secret:
             secretName: ose-pivproxy-smartcard-ca
-            defaultMode: 420
+            defaultMode: 440
         - name: ose-pivproxy-client-secret-mount
           secret:
             secretName: ose-pivproxy-client-secrets
-            defaultMode: 420            
+            defaultMode: 440            
         #- name: ose-pivproxy-config
         #  configMap:
         #    name: ose-pivproxy
