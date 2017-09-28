@@ -60,6 +60,7 @@ RUN chgrp -R 0 /apache && \
     chgrp -R 0 /run/httpd && \
     chgrp -R 0 /etc/httpd && \
     chmod -R g+wx /run/httpd && \
+    chmod -R g+wx /etc/httpd/conf.d && \
     chmod -R g+wx /etc/httpd/run && \
     chmod -R g+wx /etc/httpd/logs && \
     chmod -R g+rwx /var/log/httpd
