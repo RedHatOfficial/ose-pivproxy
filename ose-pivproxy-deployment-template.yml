@@ -33,6 +33,7 @@ objects:
       metadata:
         labels:
           name: ose-pivproxy
+          app: ose-pivproxy
       spec:
         containers:
         - name: ose-pivproxy

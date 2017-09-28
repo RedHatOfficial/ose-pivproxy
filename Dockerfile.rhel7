@@ -51,7 +51,7 @@ RUN mkdir /apache && \
 COPY passwd.template start.sh /apache/
 COPY healthz.html /var/www/html/
 COPY Dockerfile /buildinfo/
-COPY pivproxy.conf /etc/httpd/conf.d/00-pivproxy.conf
+COPY pivproxy.conf /apache/default-pivproxy.conf
 
 # set file permissions
 RUN chgrp -R 0 /apache && \

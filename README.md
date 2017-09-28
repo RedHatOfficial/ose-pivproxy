@@ -192,6 +192,22 @@ identityProviders:
 
 Once this is added, restart the master. _If there is more than one master then each master must be editied and restarted._
 
+## Customizing the HTTPD Configuration
+The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`. 
+
+Once the configuration is saved locally you can edit it. After the file has been edited the it can be added to the ConfigMap.
+```bash
+[]$ oc delete configmap/ose-pivproxy
+[]$ oc create configmap ose-pivproxy --from-file=pivproxy.conf=/path/to/edited/pivproxy.conf
+```
+
+If at any time you need to revert to the default configuration the `pivproxy.conf` item can be deleted from the configmap. If the ConfigMap needs to be updated it can be edited in place or the above steps can be followed and the ConfigMap can be deleted and re-added.
+
+To restart the pods simply kill them all and let the replication controller handle it:
+```bash
+[]$ oc delete pods --selector app=ose-pivproxy
+```
+
 ## Troubleshooting
 There is a value, which defaults to `info` that can be set in `dc/ose-pivproxy`. This will allow for changing the Apache log level. You can set it to any of the valid values for Apache but something like `debug` or `trace1` through `trace8` would provide the most detail.
 
