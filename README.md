@@ -178,3 +178,12 @@ identityProviders:
 ```
 
 Once this is added, restart the master. _If there is more than one master then each master must be editied and restarted._
+
+## Troubleshooting
+There is a value, which defaults to `info` that can be set in `dc/ose-pivproxy`. This will allow for changing the Apache log level. You can set it to any of the valid values for Apache but something like `debug` or `trace1` through `trace8` would provide the most detail.
+
+```bash
+[]$ oc set env dc/ose-pivproxy PROXY_LOG_LEVEL=debug
+```
+
+This will cause the application to redeploy and there will be more information in the logs.
