@@ -1,5 +1,8 @@
 # Containerized PIV/CAC Proxy for Authentication in OpenShift
 
+## Overview
+This project is to provide a streamlined process for implementing a PIV/CAC authenticating proxy for OpenShift Origin and Enterprise (OCP). The containers provided can be either CentOS or RHEL7 based. The advanced configuration can be performed without creating a new project or forking this one. The process is easy to understand and can be completed in a few steps by administrators.
+
 ## Requirements
 * SSH access to **at least one** Master node
   * Sudo or root access on that node
@@ -96,9 +99,19 @@ You will need to copy the issued CA that contains the trust for all of the autho
 ```
 
 ### Apply and Use the Build Configuration Template
+There are two different builds that can be used for this deployment. The **default** is for a CentOS container to be built. If you have the supporting infrastructure that you can use (or need to use) a RHEL7 image then you can build that instead by using a different dockerfile when you process the build template.
+
+**For CentOS**
 ```bash
 []$ oc apply -f ./ose-pivproxy-build-template.yml
 []$ oc process ose-pivproxy-build | oc apply -f -
+[]$ oc start-build ose-pivproxy-bc
+```
+
+**For RHEL7**
+```bash
+[]$ oc apply -f ./ose-pivproxy-build-template.yml
+[]$ oc process ose-pivproxy-build -p DOCKERFILE=Dockerfile.rhel7 | oc apply -f -
 []$ oc start-build ose-pivproxy-bc
 ```
 
@@ -141,7 +154,7 @@ You can verify that the server certificate is correct by checking the subject al
 
 _If the "DNS:" entries are not present or do not match the expected route the certificates will need to be reissued._
 
-Now you can recreate the secret `ose-pivproxy-certs` and override the secrets that were automatically generated when the server was created. These commands will create a new secret in place of the old one. 
+Now you can recreate the secret `ose-pivproxy-certs` and override the secrets that were automatically generated when the server was created. These commands will create a new secret in place of the automatically generated one. 
 ```bash
 []$ oc get secret/ose-pivproxy-certs -o yaml > ose-pivproxy-certs.yml.backup
 []$ oc delete secret/ose-pivproxy-certs

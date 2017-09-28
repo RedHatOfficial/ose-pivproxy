@@ -54,6 +54,9 @@ objects:
           - mountPath: /client_secrets
             name: ose-pivproxy-client-secret-mount
             readOnly: true
+          - mountPath: /config
+            name: ose-pivproxy-config-mount
+            readOnly: true            
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -86,10 +89,10 @@ objects:
           secret:
             secretName: ose-pivproxy-client-secrets
             defaultMode: 440            
-        #- name: ose-pivproxy-config
-        #  configMap:
-        #    name: ose-pivproxy
-        #    defaultMode: 420
+        - name: ose-pivproxy-config-mount
+          configMap:
+            name: ose-pivproxy
+            defaultMode: 440
 - apiVersion: v1
   kind: Service
   metadata:
@@ -125,7 +128,15 @@ objects:
       kind: Service
       name: ose-pivproxy
       weight: 100
-    wildcardPolicy: None        
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      name: ose-pivproxy
+      app: ose-pivproxy
+    name: ose-pivproxy
+  data: {} # empty data as a placeholder
 parameters:
   - name: P_NAMESPACE
     description: Target namespace for image. Used to reference the ImageStream source for the image.

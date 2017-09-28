@@ -8,12 +8,14 @@ metadata:
   labels:
     app: ose-pivproxy
 objects:
+# output target image stream
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: ${IMAGE_NAME}
     labels:
       app: ose-pivproxy
+# build configuration
 - apiVersion: v1
   kind: BuildConfig
   metadata:
@@ -29,20 +31,26 @@ objects:
         ref: ${GIT_REF}
     strategy:
       type: Docker
+      dockerStrategy:
+        dockerfilePath: ${DOCKERFILE}
     output:
       to:
         kind: ImageStreamTag
         name: '${IMAGE_NAME}:latest'
 parameters:
   - name: GIT_URI
-    description: The Git URI.
+    description: The Git URI. This expects a path to a repository for building the PIV Proxy HTTPD with Dockerfiles as well as supporting configuration.
     value: "https://github.com/chrisruffalo/ose-pivproxy.git"
     required: true
   - name: GIT_REF
-    description: The git reference (tag, branch, or other reference) to build from.
+    description: The git reference (tag, branch, or other reference) to build from, defaults to 'master'.
     value: master
     required: true
+  - name: DOCKERFILE
+    description: "The name of the dockerfile to use. 'Dockerfile' for CentOS and 'Dockerfile.rhel7' for RHEL7."    
+    value: Dockerfile
+    required: true
   - name: IMAGE_NAME
-    description: The name of the image to be used when performing the pull operation.
+    description: The name of the image to be used when performing the pull operation to create the application.
     value: ose-pivproxy
     required: true

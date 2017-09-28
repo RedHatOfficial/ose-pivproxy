@@ -4,7 +4,7 @@ MAINTAINER Chris Ruffalo <cruffalo@redhat.com>
 
 LABEL io.k8s.description="HTTPD Proxy configured to support PIV authentication with OCP" \
   io.k8s.display-name="HTTPD PIV Proxy" \
-  io.openshift.expose-services="80:tcp,443:tcp \
+  io.openshift.expose-services="8080:tcp,8443:tcp \
   io.openshift.tags="x509,certificates,proxy,PIV,CAC" \
   name="ose-pivproxy" \
   architecture=x86_64
@@ -52,7 +52,7 @@ RUN mkdir /apache && \
 COPY passwd.template start.sh /apache/
 COPY healthz.html /var/www/html/
 COPY Dockerfile /buildinfo/
-COPY pivproxy.conf /etc/httpd/conf.d/00-pivproxy.conf
+COPY pivproxy.conf /apache/default-pivproxy.conf
 
 # set file permissions
 RUN chgrp -R 0 /apache && \
@@ -61,6 +61,7 @@ RUN chgrp -R 0 /apache && \
     chgrp -R 0 /run/httpd && \
     chgrp -R 0 /etc/httpd && \
     chmod -R g+wx /run/httpd && \
+    chmod -R g+wx /etc/httpd/conf.d && \
     chmod -R g+wx /etc/httpd/run && \
     chmod -R g+wx /etc/httpd/logs && \
     chmod -R g+rwx /var/log/httpd
