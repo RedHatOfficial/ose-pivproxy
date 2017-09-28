@@ -1,9 +1,13 @@
 # Containerized PIV/CAC Proxy for Authentication in OpenShift
 
+## Reference
+This was created from the documentation provided by OpenShift for versions [3.4](https://docs.openshift.com/container-platform/3.4/install_config/configuring_authentication.html#RequestHeaderIdentityProvider), [3.5](https://docs.openshift.com/container-platform/3.5/admin_solutions/authentication.html#request-header-auth), and [3.6](https://docs.openshift.com/container-platform/3.6/admin_solutions/authentication.html#request-header-auth).
+
 ## Overview
 This project is to provide a streamlined process for implementing a PIV/CAC authenticating proxy for OpenShift Origin and Enterprise (OCP). The containers provided can be either CentOS or RHEL7 based. The advanced configuration can be performed without creating a new project or forking this one. The process is easy to understand and can be completed in a few steps by administrators.
 
 ## Requirements
+* OpenShift Origin/Enterprise 3.4+
 * SSH access to **at least one** Master node
   * Sudo or root access on that node
 * Certificate Material for Authentication Endpoint
