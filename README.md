@@ -9,7 +9,8 @@
   * Certificate Authority chain (ex: ca.crt)
 * Certificate Authority chain for verifying the client's smart card token (PIV/CAC)
   * Generally issued by the identification granting agency
-  * Must be _all_ of the required authorities concatenated into one file
+  * Must be **all** of the required authorities concatenated into one file
+  * Must be the **entire** trust chain as well; all the way to the root
 
 ## Variables
 Variables in this document are denoted with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
@@ -144,7 +145,7 @@ Now you can recreate the secret `ose-pivproxy-certs` and override the secrets th
 ```bash
 []$ oc get secret/ose-pivproxy-certs -o yaml > ose-pivproxy-certs.yml.backup
 []$ oc delete secret/ose-pivproxy-certs
-[]$ oc secret new ose-pivproxy-certs tls.key=/path/to/hostname.key tls.crt=/path/to/hostname.crt ca.crt=/path/to/ca-chain.crt
+[]$ oc secret new ose-pivproxy-certs tls.key=/path/to/hostname.key tls.crt=/path/to/hostname.crt
 ```
 
 Once the new secret is in place the application should be redeployed.

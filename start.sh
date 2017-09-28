@@ -15,5 +15,9 @@ echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 # collect information
 export CURRENT_NAMESPACE=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 
+# copy certificates to trusted CA directory
+cp /piv/smartcard-ca.crt /etc/pki/CA/certs/smartcard-ca.crt
+cp /client_secrets/master-ca.crt /etc/pki/CA/certs/master-ca.crt
+
 # start apache in the foreground
 /usr/sbin/httpd -DFOREGROUND
