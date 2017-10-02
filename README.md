@@ -158,7 +158,7 @@ You can verify that the server certificate is correct by checking the subject al
 
 _If the "DNS:" entries are not present or do not match the expected route the certificates will need to be reissued._
 
-Now you can recreate the secret `ose-pivproxy-certs` and override the secrets that were automatically generated when the server was created. These commands will create a new secret in place of the automatically generated one. 
+Now you can recreate the secret `ose-pivproxy-certs` and override the secrets that were automatically generated when the server was created. These commands will create a new secret in place of the automatically generated one.
 ```bash
 []$ oc get secret/ose-pivproxy-certs -o yaml > ose-pivproxy-certs.yml.backup
 []$ oc delete secret/ose-pivproxy-certs
@@ -178,8 +178,8 @@ The following identitiy provider needs to be added to the OCP master configurati
 ```yaml
 identityProviders:
   - name: "ocp_pivproxy"
-    challenge: true
     login: true
+    challenge: false
     mappingMethod: add
     provider:
       apiVersion: v1
@@ -194,10 +194,10 @@ identityProviders:
       - X-Remote-User
 ```
 
-Once this is added, restart the master. _If there is more than one master then each master must be editied and restarted._
+Once this is added, restart the master. _If there is more than one master then each master must be edited and restarted._
 
 ## Customizing the HTTPD Configuration
-The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`. 
+The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`.
 
 Once the configuration is saved locally you can edit it. After the file has been edited the it can be added to the ConfigMap.
 ```bash
