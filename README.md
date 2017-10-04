@@ -1,10 +1,10 @@
-# Containerized PIV/CAC Proxy for Authentication in OpenShift
-
-## Reference
-This was created from the documentation provided by OpenShift for versions [3.4](https://docs.openshift.com/container-platform/3.4/install_config/configuring_authentication.html#RequestHeaderIdentityProvider), [3.5](https://docs.openshift.com/container-platform/3.5/admin_solutions/authentication.html#request-header-auth), and [3.6](https://docs.openshift.com/container-platform/3.6/admin_solutions/authentication.html#request-header-auth).
+# Containerized PIV/CAC Authentication Proxy for OpenShift
 
 ## Overview
 This project is to provide a streamlined process for implementing a PIV/CAC authenticating proxy for OpenShift Origin and Enterprise (OCP). The containers provided can be either CentOS or RHEL7 based. The advanced configuration can be performed without creating a new project or forking this one. The process is easy to understand and can be completed in a few steps by administrators.
+
+## Reference
+This was created from the documentation provided by OpenShift for versions [3.4](https://docs.openshift.com/container-platform/3.4/install_config/configuring_authentication.html#RequestHeaderIdentityProvider), [3.5](https://docs.openshift.com/container-platform/3.5/admin_solutions/authentication.html#request-header-auth), and [3.6](https://docs.openshift.com/container-platform/3.6/admin_solutions/authentication.html#request-header-auth).
 
 ## Requirements
 * OpenShift Origin/Enterprise 3.4+
@@ -16,8 +16,14 @@ This project is to provide a streamlined process for implementing a PIV/CAC auth
   * Certificate Authority chain (ex: ca.crt)
 * Certificate Authority chain for verifying the client's smart card token (PIV/CAC)
   * Generally issued by the identification granting agency
-  * Must be **all** of the required authorities concatenated into one file
-  * Must be the **entire** trust chain as well; all the way to the root
+  * Must contain **all** of the required authorities concatenated into one file
+  * Must contain the **entire** trust chain as well; all the way to the root
+
+## Publicly Available PKI Materials
+The reason that links to government infrastructure are provided here is because these pages can be difficult to find. It is important to use _correct_ and _properly trusted_ certificate material to ensure the security and integrity of any authentication performed to OpenShift with this method.
+* [Health and Human Services PKI Downloads](https://ocio.nih.gov/Smartcard/Pages/PKI_chain.aspx)
+* [Department of Defense PKI Downloads](https://iase.disa.mil/pki-pke/Pages/tools.aspx)
+* [Department of Treasury PKI Downloads](http://pki.treas.gov/crl_certs.htm)
 
 ## Variables
 Variables in this document are denoted with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
