@@ -102,7 +102,7 @@ You will need to copy the issued CA that contains the trust for all of the autho
 []$ oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt=/path/to/smartcard-ca-chain-file.crt
 ```
 
-If you don't have a chain or you just want to see how this works in a test environment [go here](#i-don-t-have-a-client-authority-chain-certificate).
+If you don't have a chain or you just want to see how this works in a test environment [go here](#i-dont-have-a-client-authoritychaincertificate).
 
 ### Apply and Use the Build Configuration Template
 There are two different builds that can be used for this deployment. The **default** is for a CentOS container to be built. If you have the supporting infrastructure that you can use (or need to use) a RHEL7 image then you can build that instead by using a different dockerfile when you process the build template.
