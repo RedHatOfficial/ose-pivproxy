@@ -102,6 +102,8 @@ You will need to copy the issued CA that contains the trust for all of the autho
 []$ oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt=/path/to/smartcard-ca-chain-file.crt
 ```
 
+If you don't have a chain or you just want to see how this works in a test environment [go here](#i-don-t-have-a-client-authority-chain-certificate).
+
 ### Apply and Use the Build Configuration Template
 There are two different builds that can be used for this deployment. The **default** is for a CentOS container to be built. If you have the supporting infrastructure that you can use (or need to use) a RHEL7 image then you can build that instead by using a different dockerfile when you process the build template.
 
@@ -212,6 +214,52 @@ To restart the pods simply kill them all and let the replication controller hand
 []$ oc delete pods --selector app=ose-pivproxy
 ```
 
+## I Don't Have a Client Authority/Chain/Certificate
+In the event that you do not have a smartcard infrastructure or you need a faster way to test you can create your own CA and certificate you can follow these instructions. These are also useful if you do not have a PIV/CAC or do not have the appropriate hardware or support to utilize a smartcard on your hardware.
+
+First you will need to generate the authority (which will be a self-signed authority). Follow the prompts and fill out the values as needed.
+
+```bash
+[]$ openssl genrsa -out piv_root_ca.key 2048
+[]$ openssl req -x509 -new -nodes -key piv_root_ca.key -sha512 -days 1024 -out piv_root_ca.crt
+```
+
+Then you will need to create a signing request. The default configuration for the HTTPD authentication proxy uses the msUPN as the username so you will want to make sure that is set. You can do this with a custom openssl configuration.
+```bash
+cat > ./client_cert.conf << EOF
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[req_distinguished_name]
+
+[ v3_req ]
+basicConstraints = critical,CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth,clientAuth
+nsCertType = client,server
+subjectAltName = @alt_names
+
+[alt_names]
+otherName=msUPN;UTF8:<put user name here>
+EOF
+```
+
+Once the client certificate configuration has been saved and adjusted as needed the rest of the PKI material can be generated. Follow the prompts as appropriate on each command if needed.
+```bash
+openssl genrsa -out client_cert.key 2048
+openssl req -new -key client_cert.key -sha512 -out client_cert.csr
+openssl x509 -req -in client_cert.csr -CA piv_root_ca.crt -CAkey piv_root_ca.key -CAcreateserial -out client_cert.crt -days 1024 -sha512 -extfile client_cert.conf -extensions v3_req
+```
+
+You can load the certificate authority (`piv_root_ca.crt`) into the smartcard-ca secret in your pivproxy project in OpenShift.
+```bash
+[]$ oc delete secret ose-pivproxy-smartcard-ca
+[]$ oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt=piv_root_ca.crt
+```
+
+Now the **client** certificate you created (`client_cert.crt`) can be used with your browser to provide x509 authentication without needed a hard token or any of the other PKI/PIV infrastructure.
+
 ## Troubleshooting
 There is a value, which defaults to `info` that can be set in `dc/ose-pivproxy`. This will allow for changing the Apache log level. You can set it to any of the valid values for Apache but something like `debug` or `trace1` through `trace8` would provide the most detail.
 
@@ -227,4 +275,4 @@ This will cause the application to redeploy and there will be more information i
 
 For the serving certificates modern browsers (IE10+, Chrome, Firefox) all **require** that there be a SAN (Subject Alternate Name) that matches the hostname. The CN alone is _no longer_ sufficient _and_ that advice has been added to the SSL/TLS RFCs. The SAN list is the canonical location for the matching DNS name(s).
 
-For the CAC/PIV trust chain it is imperative that _each_ intermediate trust is added. Many government agencies have rotating intermediate certificates that come in scope as new cards are issued and it is common to _forget_ to add new ones which means that new personnel will not be able to acces the site. This also means that an older version of the chain may not authenticate new users. Be aware of this and you will stop a lot of issues before they happen.
+For the CAC/PIV trust chain it is imperative that _each_ intermediate trust is added. Many government agencies have rotating intermediate certificates that come in scope as new cards are issued and it is common to _forget_ to add new ones which means that new personnel will not be able to access the site. This also means that an older version of the chain may not authenticate new users. Be aware of this and you will stop a lot of issues before they happen.

@@ -57,7 +57,7 @@ objects:
             readOnly: true
           - mountPath: /config
             name: ose-pivproxy-config-mount
-            readOnly: true            
+            readOnly: true
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -89,7 +89,7 @@ objects:
         - name: ose-pivproxy-client-secret-mount
           secret:
             secretName: ose-pivproxy-client-secrets
-            defaultMode: 440            
+            defaultMode: 440
         - name: ose-pivproxy-config-mount
           configMap:
             name: ose-pivproxy
