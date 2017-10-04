@@ -159,7 +159,7 @@ There are three pieces of required material:
 
 You can verify that the server certificate is correct by checking the subject alternate name provided.
 ```bash
-[]$ openssl x509 -in /path/to/<public pivproxy url>.crt -noout -text | grep
+[]$ openssl x509 -in /path/to/<public pivproxy url>.crt -noout -text | grep -a2 X509v3
   X509v3 Subject Alternative Name:                                    
     DNS:<public pivproxy url>, DNS:<another expected host name>
 ```
