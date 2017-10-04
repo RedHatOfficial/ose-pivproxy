@@ -13,7 +13,6 @@ This was created from the documentation provided by OpenShift for versions [3.4]
 * Certificate Material for Authentication Endpoint
   * Private Key (ex: hostname.key)
   * Public Cert (ex: hostname.crt)
-  * Certificate Authority chain (ex: ca.crt)
 * Certificate Authority chain for verifying the client's smart card token (PIV/CAC)
   * Generally issued by the identification granting agency
   * Must contain **all** of the required authorities concatenated into one file
@@ -139,14 +138,13 @@ These commands can (and should) be run any time the build template is changed to
 These commands can be run any time the deployment template is changed. You can run `oc delete dc/ose-pivproxy svc/ose-pivproxy route/ose-pivproxy` at any time to clean up the deployment so that it can be removed or recreated.
 
 ### Use Site-Specific Certificates for HTTPS/TLS
-In order to have trusted site-specific certificates you will need to gather three pieces of information for the eventual route to serve the proper TLS connection. The application uses a passthrough route because of the client certificate authorization on the application side. This means that, among other things, the server certificates provided **must** have the proper hostname in **both** the CN **and** the alternative name list. _Failure to have proper TLS certificates will result in a non-working PIV proxy._
+In order to have trusted site-specific certificates you will need to gather two pieces of information for the eventual route to serve the proper TLS connection. The application uses a passthrough route because of the client certificate authorization on the application side. This means that, among other things, the server certificates provided **must** have the proper hostname in **both** the CN **and** the alternative name list. _Failure to have proper TLS certificates will result in a non-working PIV proxy._
 
-There are three pieces of required material:
+There are two pieces of required material:
 * The server certificate for the hostname
 * The server private key matching the certificate
-* The CA chain file that provides the trust chain for the server certificate
 
-**If you do not have server certificates you can create them easily with the `oc` command**. (From a master node.)
+**If you do not have server certificates** you can create them easily with the `oc` command. (From a master node.)
 ```bash
 []$ oc adm ca create-server-cert \
     --cert='/etc/origin/proxy/<public pivproxy url>.crt' \
@@ -173,10 +171,9 @@ Now you can recreate the secret `ose-pivproxy-certs` and override the secrets th
 []$ oc secret new ose-pivproxy-certs tls.key=/path/to/hostname.key tls.crt=/path/to/hostname.crt
 ```
 
-Once the new secret is in place the application should be redeployed.
-
+If authentication proxy pods were already running they should be destroyed to reload the secret.
 ```bash
-[]$ oc rollout latest dc/ose-pivproxy
+[]$ oc delete pods --selector app=ose-pivproxy
 ```
 
 ### Configure Master(s) to use PIV Proxy
