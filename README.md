@@ -202,7 +202,7 @@ identityProviders:
       loginURL: "https://<public pivproxy url>/login-proxy/oauth/authorize?${query}"
       clientCA: /etc/origin/proxy/proxyca.crt
       clientCommonNames:
-       - <public master url>
+       - <public pivproxy url>
        - system:proxy
       headers:
       - X-Remote-User
