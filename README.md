@@ -3,7 +3,7 @@
 ## Overview
 This project is to provide a streamlined process for implementing a PIV/CAC authenticating proxy for OpenShift Origin and Enterprise (OCP). The containers provided can be either CentOS or RHEL7 based. The advanced configuration can be performed without creating a new project or forking this one. The process is easy to understand and can be completed in a few steps by administrators.
 
-## Reference
+## References
 This was created from the documentation provided by OpenShift for versions [3.4](https://docs.openshift.com/container-platform/3.4/install_config/configuring_authentication.html#RequestHeaderIdentityProvider), [3.5](https://docs.openshift.com/container-platform/3.5/admin_solutions/authentication.html#request-header-auth), and [3.6](https://docs.openshift.com/container-platform/3.6/admin_solutions/authentication.html#request-header-auth).
 
 ## Requirements
@@ -135,7 +135,16 @@ These commands can (and should) be run any time the build template is changed to
 []$ oc rollout latest dc/ose-pivproxy
 ```
 
-These commands can be run any time the deployment template is changed. You can run `oc delete dc/ose-pivproxy svc/ose-pivproxy route/ose-pivproxy` at any time to clean up the deployment so that it can be removed or recreated.
+These commands can be run any time the deployment template is changed. You can run `oc delete dc/ose-pivproxy svc/ose-pivproxy route/ose-pivproxy` at any time to clean up the deployment so that it can be removed or recreated. The variable P_MASTER_PUBLIC_URL is used in variable expressions like `https://${P_PIVPROXY_PUBLIC_URL}`. In the event that you need to use a different port for the master URL a colon and port can be appended like `:8443`.
+
+```bash
+[]$ oc new-app --template=ose-pivproxy -p P_PIVPROXY_PUBLIC_URL=auth.ocp.com -p P_MASTER_PUBLIC_URL=master.ocp.com:8443
+```
+
+The url and port can be changed later at any time.
+```bash
+[]$ oc set env dc/ose-pivproxy P_MASTER_PUBLIC_URL=new.ocp.com:8443
+```
 
 ### Use Site-Specific Certificates for HTTPS/TLS
 In order to have trusted site-specific certificates you will need to gather two pieces of information for the eventual route to serve the proper TLS connection. The application uses a passthrough route because of the client certificate authorization on the application side. This means that, among other things, the server certificates provided **must** have the proper hostname in **both** the CN **and** the alternative name list. _Failure to have proper TLS certificates will result in a non-working PIV proxy._
@@ -202,6 +211,8 @@ identityProviders:
 Once this is added, restart the master. _If there is more than one master then each master must be edited and restarted._
 
 ## Customizing the HTTPD Configuration
+
+### Creating the Configuration Override File
 The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`.
 
 Once the configuration is saved locally you can edit it. After the file has been edited the it can be added to the ConfigMap.
@@ -217,7 +228,42 @@ To restart the pods simply kill them all and let the replication controller hand
 []$ oc delete pods --selector app=ose-pivproxy
 ```
 
-## I Don't Have a Client Authority/Chain/Certificate
+### Changing the User's ID and Display Name
+The default configuration is to get the _first_ msUPN from the SAN section of the client's cert, remove anything after the '@' symbol (treating it as an email address) and then use that as both the user's identifier and as the display name.
+
+The relevant parts of this configuration are:
+```
+RewriteRule ^.* - [E=X_LOWER_USER:${lc:%{SSL:SSL_CLIENT_SAN_OTHER_msUPN_0}},L]
+RequestHeader set X-Remote-User "%{X_LOWER_USER}e" env=X_LOWER_USER
+RequestHeader edit X-Remote-User "([^@]+)@.*" $1
+```
+
+This takes the SSL variable SSL_CLIENT_SAN_OTHER_msUPN_0 and converts it to lower case and then sets the request header `X-Remote-User` to be the lower-cased version of the msUPN. Then everything before the '@' is selected and saved in the edited version of the `X-Remote-User` header.
+
+In the `master-config.yaml` on the master node(s) the configuration instructs OpenShift to use the `X-Remote-User` header as the first source of the user id. (The `headers` variable is used for user ID.)
+```yaml
+headers:
+- X-Remote-User
+```
+
+There are many ways that you can adjust or add to this configuration. One basic way would be to use the CN of the presented certificate as the user's display name. This is useful in situations where the msUPN is only a number as with some configurations. (Where the EDIPI number is used in the msUPN field for example.)
+
+Add the following to your customized `pivproxy.conf` after the last `RequestHeader edit` line. After editing the file you will need to recreate the secret and restart the ose-pivproxy pods.
+```
+RequestHeader set X-Remote-User-Display-Name "%{SSL_CLIENT_S_DN_CN}e" env=SSL_CLIENT_S_DN_CN
+```
+
+The `master-config.yaml` must also be edited to have OpenShift use the information passed in from the `X-Remote-User-Display-Name` header. After the `headers` property a `nameHeaders` property should be added.
+```yaml
+nameHeaders:
+- X-Remote-User-Display-Name
+```
+
+This is just one example of the modifications that can be made to pass in different types of information to OpenShift for both the user's id as well as the display name. More information on the variables available from SSL can be [found in the Apache mod_ssl documentation](https://httpd.apache.org/docs/current/mod/mod_ssl.html) under the "Environment Variables" header.
+
+## Testing and Development
+
+### I Don't Have a Client Authority/Chain/Certificate
 In the event that you do not have a smartcard infrastructure or you need a faster way to test you can create your own CA and certificate you can follow these instructions. These are also useful if you do not have a PIV/CAC or do not have the appropriate hardware or support to utilize a smartcard on your hardware.
 
 First you will need to generate the authority (which will be a self-signed authority). Follow the prompts and fill out the values as needed.
