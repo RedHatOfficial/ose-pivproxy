@@ -26,7 +26,7 @@ The reason that links to government infrastructure are provided here is because 
 
 ## Variables
 Variables in this document are denoted with `<variable>`. These are items that the user/configurer should be careful to note as they may not have defaults. There are two variables that are required to complete the configuration and have _no_ default value.
-* **`<public pivproxy url>`** - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients neededing to authenticate. Typically this would follow the application name, namespace, and cloud DNS base pattern. You could create a custom route for it if your hosting environment can support that.
+* **`<public pivproxy url>`** - the publicly accessible URL for the PIV proxy created in this guide. The master console _will redirect_ traffic to this URL when a login is required. This URL must be accessible and routable by clients needing to authenticate. Typically this would follow the application name, namespace, and cloud DNS base pattern. You could create a custom route for it if your hosting environment can support that.
 * **`<public master url>`** - the public URL used by clients to reach the master console. The PIV proxy will need to redirect traffic from itself to this URL to complete the authentication process.
 
 _Be sure to replace any instance of these variables in the below documentation with your own site-specific values._
@@ -82,7 +82,6 @@ These commands must be performed on any **ONE** master node as root (`sudo -i`).
       > $PIV_SECRET_BASEDIR/piv_proxy.pem
 ```
 _Note: these commands can actually be executed **anywhere** but executing them on the first master is considerably easier when it has the `oc` client installed already. In that case you can adjust the paths so that they are in a temporary or local directory like `./proxy`._
-
 
 Then copy the files from the `/etc/origin/proxy` directory to each other master.
 ```bash
