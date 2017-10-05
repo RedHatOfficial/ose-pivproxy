@@ -242,8 +242,13 @@ This takes the SSL variable SSL_CLIENT_SAN_OTHER_msUPN_0 and converts it to lowe
 
 In the `master-config.yaml` on the master node(s) the configuration instructs OpenShift to use the `X-Remote-User` header as the first source of the user id. (The `headers` variable is used for user ID.)
 ```yaml
-headers:
-- X-Remote-User
+identityProviders:
+  - name: "ocp_pivproxy"
+    # snip ...
+    provider:
+      # snip...
+      headers:
+      - X-Remote-User
 ```
 
 There are many ways that you can adjust or add to this configuration. One basic way would be to use the CN of the presented certificate as the user's display name. This is useful in situations where the msUPN is only a number as with some configurations. (Where the EDIPI number is used in the msUPN field for example.)
@@ -255,8 +260,15 @@ RequestHeader set X-Remote-User-Display-Name "%{SSL_CLIENT_S_DN_CN}e" env=SSL_CL
 
 The `master-config.yaml` must also be edited to have OpenShift use the information passed in from the `X-Remote-User-Display-Name` header. After the `headers` property a `nameHeaders` property should be added.
 ```yaml
-nameHeaders:
-- X-Remote-User-Display-Name
+identityProviders:
+  - name: "ocp_pivproxy"
+    # snip ...
+    provider:
+      # snip...
+      headers:
+      - X-Remote-User
+      nameHeaders:
+      - X-Remote-User-Display-Name
 ```
 
 This is just one example of the modifications that can be made to pass in different types of information to OpenShift for both the user's id as well as the display name. More information on the variables available from SSL can be [found in the Apache mod_ssl documentation](https://httpd.apache.org/docs/current/mod/mod_ssl.html) under the "Environment Variables" header.
