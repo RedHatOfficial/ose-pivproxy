@@ -28,48 +28,31 @@ RUN yum update -y && \
     rm -rf /var/cache/yum/* && \
     rm -rf /var/lib/yum/*
 
-# change apache ports and remove files
-RUN sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/httpd.conf && \
-    rm -f /etc/httpd/conf.d/ssl.conf && \
-    rm -f /etc/httpd/conf.d/autoindex.conf && \
-    rm -f /etc/httpd/conf.d/userdir.conf && \
-    rm -f /etc/httpd/conf.d/README && \
-    rm -f /etc/httpd/conf.d/welcome.conf
-
 # set environment variables
 ENV MASTER_PUBLIC_URL=ocp.master.com \
     PIVPROXY_PUBLIC_URL=pivproxy.master.com \
     BASE_NAME=ose-pivproxy \
-    PROXY_LOG_LEVEL=info
+    PROXY_LOG_LEVEL=info \
+    MAX_KEEP_ALIVE_REQUESTS=100
 
 # create supporting folders, permissions, etc
 RUN mkdir /apache && \
-    mkdir /buildinfo && \
-    mkdir /secrets
+    mkdir /buildinfo
 
 # copy in supporting files
-COPY passwd.template start.sh /apache/
-COPY healthz.html /var/www/html/
-COPY Dockerfile /buildinfo/
+COPY passwd.template start.sh shared-setup.sh /apache/
+COPY index.html healthz.html /var/www/html/
+COPY Dockerfile.rhel7 /buildinfo/Dockerfile
 COPY pivproxy.conf /apache/default-pivproxy.conf
+COPY apache-global.conf /etc/httpd/conf.d/00-global.conf
 
-# set file permissions
-RUN chgrp -R 0 /apache && \
-    chmod u+x,g+x /apache/start.sh && \
-    chgrp -R 0 /secrets && \
-    chgrp -R 0 /run/httpd && \
-    chgrp -R 0 /etc/httpd && \
-    chmod -R g+wx /run/httpd && \
-    chmod -R g+wx /etc/httpd/conf.d && \
-    chmod -R g+wx /etc/httpd/run && \
-    chmod -R g+wx /etc/httpd/logs && \
-    chmod -R g+rwx /var/log/httpd
+# run, and then remove, setup steps
+RUN chmod +x /apache/shared-setup.sh && \
+    /apache/shared-setup.sh && \
+    rm -f /apache/shared-setup.sh
 
 # set working dir
 WORKDIR /apache
-
-# set mount points / volumes
-VOLUME ["/secrets"]
 
 # start httpd as the entry point
 ENTRYPOINT /apache/start.sh

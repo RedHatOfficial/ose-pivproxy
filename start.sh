@@ -16,11 +16,13 @@ echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 export CURRENT_NAMESPACE=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
 
 # if the customizable configuration exists use it
+CONF_SOURCE="/apache/default-pivproxy.conf"
+CONF_TARGET="/etc/httpd/conf.d/01-pivproxy.conf"
 if [ -f /config/pivproxy.conf ]; then
-  cp /config/pivproxy.conf /etc/httpd/conf.d/00-pivproxy.conf
-else # otherwise use the default	
-  cp /apache/default-pivproxy.conf /etc/httpd/conf.d/00-pivproxy.conf
+  CONF_SOURCE="/config/pivproxy.conf"
 fi
+echo "Using configuration file from: ${CONF_SOURCE}"
+cp ${CONF_SOURCE} ${CONF_TARGET}
 
 # start apache in the foreground
 /usr/sbin/httpd -DFOREGROUND
