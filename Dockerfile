@@ -39,7 +39,7 @@ ENV MASTER_PUBLIC_URL=ocp.master.com \
 # create supporting folders, permissions, etc
 RUN mkdir /apache && \
     mkdir /buildinfo
-    
+
 # copy in supporting files
 COPY passwd.template start.sh shared-setup.sh /apache/
 COPY index.html healthz.html /var/www/html/

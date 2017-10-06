@@ -12,8 +12,12 @@ USER_NAME=$(id -un)
 # show that alternate user IDs are being honored
 echo "Running with user ${USER_NAME} (${USER_ID}) and group ${GROUP_ID}"
 
-# collect information
-export CURRENT_NAMESPACE=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
+# collect information about namespace (and do something if running without kubernetes/openshift)
+CURRENT_NAMESPACE="docker"
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
+  CURRENT_NAMESPACE=`cat /var/run/secrets/kubernetes.io/serviceaccount/namespace`
+fi
+export CURRENT_NAMESPACE
 
 # if the customizable configuration exists use it
 CONF_SOURCE="/apache/default-pivproxy.conf"
