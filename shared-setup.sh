@@ -37,7 +37,7 @@ chgrp 0 /var/www/cgi-bin
 
 # High - V-2227
 # change index option and remove symlink following
-sed -i 's/Options Indexes FollowSymLinks/Options -Indexes SymLinksIfOwnerMatch/g' /etc/httpd/conf/httpd.conf
+sed -i 's/Options Indexes FollowSymLinks/Options -Indexes +SymLinksIfOwnerMatch/g' /etc/httpd/conf/httpd.conf
 
 # Medium - V-13688
 # Medium - V-26280
