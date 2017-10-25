@@ -4,7 +4,7 @@ MAINTAINER Chris Ruffalo <cruffalo@redhat.com>
 
 LABEL io.k8s.description="HTTPD Proxy configured to support PIV authentication with OCP" \
   io.k8s.display-name="HTTPD PIV Proxy" \
-  io.openshift.expose-services="8080:tcp,8443:tcp \
+  io.openshift.expose-services="8080:tcp,8443:tcp" \
   io.openshift.tags="x509,certificates,proxy,PIV,CAC" \
   name="ose-pivproxy" \
   architecture=x86_64
@@ -12,22 +12,11 @@ LABEL io.k8s.description="HTTPD Proxy configured to support PIV authentication w
 # expose 80 for healthcheck and redirect, 443 for ssl
 EXPOSE 8080 8443
 
-# yum update/install
-RUN yum update -y && \
-	  yum install -y epel-release && \
-    yum install -y --setopt=tsflags=nodocs \
-                   httpd \
-                   mod_ssl \
-                   mod_session \
-                   apr-util-openssl \
-                   gettext \
-                   hostname \
-                   iproute \
-                   curl \
-                   nss_wrapper && \
-    yum clean all && \
-    rm -rf /var/cache/yum/* && \
-    rm -rf /var/lib/yum/*
+# use shared steps to build
+COPY shared-build.sh /tmp/shared-build.sh
+RUN chmod +x /tmp/shared-build.sh && \
+    /tmp/shared-build.sh && \
+    rm -f /tmp/shared-build.sh
 
 # set environment variables
 ENV MASTER_PUBLIC_URL=ocp.master.com \
