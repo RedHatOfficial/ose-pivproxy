@@ -30,16 +30,17 @@ RUN mkdir /apache && \
     mkdir /buildinfo
 
 # copy in supporting files
-COPY passwd.template start.sh shared-setup.sh /apache/
+COPY passwd.template start.sh /apache/
+COPY shared-setup.sh /tmp/
 COPY index.html healthz.html /var/www/html/
 COPY Dockerfile /buildinfo/
 COPY pivproxy.conf /apache/default-pivproxy.conf
 COPY apache-global.conf /etc/httpd/conf.d/00-global.conf
 
-# run, and then remove, setup steps
-RUN chmod +x /apache/shared-setup.sh && \
-    /apache/shared-setup.sh && \
-    rm -f /apache/shared-setup.sh
+# run, and then remove, shared setup steps
+RUN chmod +x /tmp/shared-setup.sh && \
+    /tmp/shared-setup.sh && \
+    rm -f /tmp/shared-setup.sh
 
 # set working dir
 WORKDIR /apache
