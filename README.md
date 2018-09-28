@@ -7,7 +7,7 @@ This project is to provide a streamlined process for implementing a PIV/CAC auth
 This was created from the documentation provided by OpenShift for versions [3.4](https://docs.openshift.com/container-platform/3.4/install_config/configuring_authentication.html#RequestHeaderIdentityProvider), [3.5](https://docs.openshift.com/container-platform/3.5/admin_solutions/authentication.html#request-header-auth), and [3.6](https://docs.openshift.com/container-platform/3.6/admin_solutions/authentication.html#request-header-auth).
 
 ## Requirements
-* OpenShift Origin/Enterprise 3.4+
+* OpenShift Origin/Enterprise 3.4+ (tested with 3.10)
 * SSH access to **at least one** Master node
   * Sudo or root access on that node
 * Certificate Material for Authentication Endpoint
@@ -61,9 +61,9 @@ If you need to create the project:
 ### Create the PIV Proxy Client PKI Secret
 In order to create a trusted communication channel between the server and the client there needs to be a set of PKI for the client (in this case the PIV proxy) to contact the target master. The master must also trust this communication and can be configured to allow only communication from this source. This prevents some third party from setting up their own authentication server and, through various forms of manipulation, using it as a fake source of authentication information.
 
-These commands must be performed on any **ONE** master node as root (`sudo -i`).
+These commands must be performed on any **ONE** master node as root (`sudo -i`). We use the `/etc/origin/master/proxy` directory because `/etc/origin/master` is mounted in the API pod and we don't need to add additional mounts or configuration to make it work.
 ```bash
-[]$ export PIV_SECRET_BASEDIR=/etc/origin/proxy
+[]$ export PIV_SECRET_BASEDIR=/etc/origin/master/proxy
 []$ mkdir -p $PIV_SECRET_BASEDIR
 []$ oc adm ca create-signer-cert \
     --cert=$PIV_SECRET_BASEDIR/proxyca.crt \
@@ -83,18 +83,22 @@ These commands must be performed on any **ONE** master node as root (`sudo -i`).
 ```
 _Note: these commands can actually be executed **anywhere** but executing them on the first master is considerably easier when it has the `oc` client installed already. In that case you can adjust the paths so that they are in a temporary or local directory like `./proxy`._
 
-Then copy the files from the `/etc/origin/proxy` directory to each other master.
+Then copy the files from the `/etc/origin/master/proxy` directory to each other master.
 ```bash
-[]$ scp /etc/origin/proxy master2:/etc/origin/proxy
-[]$ scp /etc/origin/proxy master3:/etc/origin/proxy
+[]$ scp /etc/origin/master/proxy master2:/etc/origin/master/proxy
+[]$ scp /etc/origin/master/proxy master3:/etc/origin/master/proxy
 ```
 _Note: this is not strictly necessary but keeps the files available in case they need to be reused or client material needs to be regenerated._
 
-Then copy the `piv_proxy.pem` to the node that the following commands will be executed from. These commands can be performed anywhere there is an `oc` client installed or they can be performed right on the master. **Also** copy the master's CA from `/etc/origin/master/ca.crt`.
+Then copy the `piv_proxy.pem` to the node that the following commands will be executed from. These commands can be performed anywhere there is an `oc` client installed or they can be performed right on the master. The `master-ca.crt` is the certificate on the master (in `/etc/origin/master`) that provides service for the master console. This is ususally `master.server.crt` but you can check each cert with `openssl x509 -in <cert> -noout -text` and examine the `X509v3 Subject Alternative Name` section for presence of the DNS names that are used for the master console.
+
 ```bash
-[]$ scp master1:/etc/origin/proxy/piv_proxy.pem /local/path/to/piv_proxy.pem
+[]$ scp master1:/etc/origin/master/proxy/piv_proxy.pem /local/path/to/piv_proxy.pem
 []$ scp master1:/etc/origin/master/ca.crt /local/path/to/master-ca.crt
+# for 3.9 and older
 []$ oc secret new ose-pivproxy-client-secrets piv_proxy.pem=/local/path/to/piv_proxy.pem master-ca.crt=/local/path/to/master-ca.crt
+# for 3.10 and newer
+[]$ oc create secret generic ose-pivproxy-client-secrets --from-file=piv_proxy.pem=/local/path/to/piv_proxy.pem --from-file=master-ca.crt=/local/path/to/master-ca.crt
 ```
 
 ### Create the Smartcard CA Secret
@@ -103,7 +107,10 @@ You will need to copy the issued CA that contains the trust for all of the autho
 ```bash
 []$ cat smartcard-issuer-1.crt >> /path/to/smartcard-ca-chain-file.crt
 []$ cat smartcard-issuer-2.crt >> /path/to/smartcard-ca-chain-file.crt
+# for 3.9 and older
 []$ oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt=/path/to/smartcard-ca-chain-file.crt
+# for 3.10 and newer
+[]$ oc create secret generic ose-pivproxy-smartcard-ca --from-file=smartcard-ca.crt=/path/to/smartcard-ca-chain-file.crt
 ```
 
 If you don't have a chain or you just want to see how this works in a test environment [go here](#i-dont-have-a-client-authoritychaincertificate).
@@ -155,8 +162,8 @@ There are two pieces of required material:
 **If you do not have server certificates** you can create them easily with the `oc` command. (From a master node.)
 ```bash
 []$ oc adm ca create-server-cert \
-    --cert='/etc/origin/proxy/<public pivproxy url>.crt' \
-    --key='/etc/origin/proxy/<public pivproxy url>.key' \
+    --cert='/etc/origin/master/proxy/<public pivproxy url>.crt' \
+    --key='/etc/origin/master/proxy/<public pivproxy url>.key' \
     --hostnames=<public pivproxy url>,ose-pivproxy.svc,ose-pivproxy.pivproxy.svc,ose-pivproxy.pivproxy.svc.default.local \
     --signer-cert=/etc/origin/master/ca.crt \
     --signer-key='/etc/origin/master/ca.key' \
@@ -186,7 +193,7 @@ If authentication proxy pods were already running they should be destroyed to re
 
 ### Configure Master(s) to use PIV Proxy
 
-The following identitiy provider needs to be added to the OCP master configuration. On each of the master nodes edit `/etc/origin/master/master-config.yaml` and add the following yaml to the `identityProviders` block as shown.
+The following identitiy provider needs to be added to the OCP master configuration. On each of the master nodes edit `/etc/origin/master/master-config.yaml` and add the following yaml to the `identityProviders` block as shown. **You should back up your `master-config.yaml` file before proceeding.**
 
 ```yaml
 identityProviders:
@@ -208,14 +215,22 @@ identityProviders:
 ```
 
 Once this is added, restart the master. _If there is more than one master then each master must be edited and restarted._
+```bash
+# restart master service (<= 3.9)
+[]$ systemctl restart atomic-openshift-master-api
+
+# restart podified master (>= 3.10)
+[]$ master-restart api
+```
 
 ## Customizing the HTTPD Configuration
 
 ### Creating the Configuration Override File
-The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`.
+The [default httpd configuration](/pivproxy.conf) is set up to provide what can be seen as the _minimum_ viable configuration. In order to implement your own configuration the easiest way is to add a `pivproxy.conf` to do the ConfigMap `ose-pivproxy`. To do this you can either start with the `[default configuration](/pivproxy.conf)` in this repo or you can pull the configuration from the running container with `oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf`.
 
 Once the configuration is saved locally you can edit it. After the file has been edited the it can be added to the ConfigMap.
 ```bash
+[]$ oc rsh <pod> cat /apache/default-pivproxy.conf > pivproxy.conf
 []$ oc delete configmap/ose-pivproxy
 []$ oc create configmap ose-pivproxy --from-file=pivproxy.conf=/path/to/edited/pivproxy.conf
 ```
@@ -304,21 +319,34 @@ subjectAltName = @alt_names
 otherName=msUPN;UTF8:<put user name here>
 EOF
 ```
+_Note: `otherName` value should match the configuration you are using in the pivproxy.conf. The default uses the msUPN name type._
 
 Once the client certificate configuration has been saved and adjusted as needed the rest of the PKI material can be generated. Follow the prompts as appropriate on each command if needed.
 ```bash
-openssl genrsa -out client_cert.key 2048
-openssl req -new -key client_cert.key -sha512 -out client_cert.csr
-openssl x509 -req -in client_cert.csr -CA piv_root_ca.crt -CAkey piv_root_ca.key -CAcreateserial -out client_cert.crt -days 1024 -sha512 -extfile client_cert.conf -extensions v3_req
+[]$ openssl genrsa -out client_cert.key 2048
+[]$ openssl req -new -key client_cert.key -sha512 -out client_cert.csr
+[]$ openssl x509 -req -in client_cert.csr -CA piv_root_ca.crt -CAkey piv_root_ca.key -CAcreateserial -out client_cert.crt -days 1024 -sha512 -extfile client_cert.conf -extensions v3_req
+```
+
+You can create a Chrome/Firefox compatible certificate from these keys to import into a browser.
+```bash
+[]$ openssl pkcs12 -export -inkey client_cert.key -in client_cert.crt -out client.pkcs12
 ```
 
 You can load the certificate authority (`piv_root_ca.crt`) into the smartcard-ca secret in your pivproxy project in OpenShift.
 ```bash
 []$ oc delete secret ose-pivproxy-smartcard-ca
+# for 3.9 and older
 []$ oc secret new ose-pivproxy-smartcard-ca smartcard-ca.crt=piv_root_ca.crt
+# for 3.10 and newer
+[]$ oc create secret generic ose-pivproxy-smartcard-ca --from-file=smartcard-ca.crt=piv_root_ca.crt
+```
+You will need to restart your pod(s) for this to take affect.
+```bash
+[]$ oc delete pods --selector app=ose-pivproxy
 ```
 
-Now the **client** certificate you created (`client_cert.crt`) can be used with your browser to provide x509 authentication without needed a hard token or any of the other PKI/PIV infrastructure.
+Now the **client** certificate you created (`client_cert.crt` or `client.pkcs12`) can be used with your browser to provide x509 authentication without needed a hard token or any of the other PKI/PIV infrastructure.
 
 ## Troubleshooting
 There is a value, which defaults to `info` that can be set in `dc/ose-pivproxy`. This will allow for changing the Apache log level. You can set it to any of the valid values for Apache but something like `debug` or `trace1` through `trace8` would provide the most detail.
