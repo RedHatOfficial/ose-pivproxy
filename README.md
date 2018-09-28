@@ -321,7 +321,7 @@ EOF
 ```
 _Note: `otherName` value should match the configuration you are using in the pivproxy.conf. The default uses the msUPN name type._
 
-Once the client certificate configuration has been saved and adjusted as needed the rest of the PKI material can be generated. Follow the prompts as appropriate on each command if needed.
+Once the client certificate configuration has been saved and adjusted as needed the rest of the PKI material can be generated. Follow the prompts as appropriate on each command if needed _Warning: Failure to add/set a CN will render the certificate unusable._
 ```bash
 []$ openssl genrsa -out client_cert.key 2048
 []$ openssl req -new -key client_cert.key -sha512 -out client_cert.csr
