@@ -206,7 +206,7 @@ identityProviders:
       kind: RequestHeaderIdentityProvider
       challengeURL: "https://<public pivproxy url>/challenging-proxy/oauth/authorize?${query}"
       loginURL: "https://<public pivproxy url>/login-proxy/oauth/authorize?${query}"
-      clientCA: /etc/origin/proxy/proxyca.crt
+      clientCA: /etc/origin/master/proxy/proxyca.crt
       clientCommonNames:
        - <public pivproxy url>
        - system:proxy
